@@ -4,10 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>OBISL | Financial Literacy for Managers</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- React & ReactDOM -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- Stable Babel Standalone Compiler (prevents iframe appends and module imports errors) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min.js"></script>
+    
+    <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Noto+Sans+Sinhala:wght@400;700&display=swap" rel="stylesheet">
     
     <style>
@@ -16,11 +21,15 @@
             background-color: #020617; 
             color: #e2e8f0;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
-        .font-sinhala { font-family: 'Noto Sans Sinhala', sans-serif; }
+        .font-sinhala { 
+            font-family: 'Noto Sans Sinhala', 'Inter', sans-serif; 
+        }
         .glass {
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.75);
             backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .card-neo {
@@ -28,7 +37,18 @@
             border: 1px solid rgba(255, 255, 255, 0.05);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .card-neo:hover { border-color: rgba(16, 185, 129, 0.3); }
+        .card-neo:hover { 
+            border-color: rgba(16, 185, 129, 0.3); 
+        }
+
+        /* Scrollbar styles to keep UI clean */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
 
         @media print {
             .no-print { display: none !important; }
@@ -41,7 +61,6 @@
             }
             .text-emerald-400, .text-blue-400 { color: #059669 !important; font-weight: bold !important; }
             .text-red-400, .text-red-500 { color: #dc2626 !important; font-weight: bold !important; }
-            .sidebar { display: none !important; }
             main { margin-left: 0 !important; }
         }
 
@@ -54,9 +73,17 @@
         
         @keyframes pulse-red {
             0%, 100% { background-color: rgba(239, 68, 68, 0.1); }
-            50% { background-color: rgba(239, 68, 68, 0.3); }
+            50% { background-color: rgba(239, 68, 68, 0.25); }
         }
         .alert-pulse { animation: pulse-red 2s infinite; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fadeIn {
+            animation: fadeIn 0.4s ease-out forwards;
+        }
     </style>
 
     <script>
@@ -78,29 +105,307 @@
 
     <div id="root"></div>
 
+    <!-- Pure Babel compilation block -->
     <script type="text/babel">
         const { useState, useMemo } = React;
 
+        // Custom dictionaries for English and Sinhala (100% localized translation)
+        const translations = {
+            en: {
+                title: "OBISL",
+                subtitle: "Financial Literacy for Managers",
+                architecture: "Live System Architecture: Book Agency Model",
+                bankPosition: "BANK POSITION",
+                netProfit: "NET PROFIT",
+                stable: "STABLE",
+                error: "ERROR",
+                roundedNote: "Rounded to Nearest 1k",
+                actualMoney: "Actual Money in Hand",
+                liquidityCrisis: "Liquidity Crisis Detected",
+                solvent: "SOLVENT: Cash flow timing is successfully synchronized.",
+                bankrupt: "BANKRUPT: Your bills exceeded your available cash. Structural failure.",
+                
+                // Navigation / Tabs
+                tab_insight: "Case Insight",
+                tab_equation: "The Equation",
+                tab_income: "Income Lab",
+                tab_balance: "Balance View",
+                tab_flow: "Cash Reality",
+                tab_cascade: "The Cascade",
+                tab_workflow: "Workflow Sim",
+                tab_breakout: "Breakout Qs",
+
+                // Insight Page
+                insight_model_title: "THE BUSINESS MODEL",
+                insight_model_desc: "Buying books for LKR 1,500 and selling for LKR 2,500. A high-margin 40% agency model.",
+                insight_timing_title: "THE TIMING GAP",
+                insight_timing_desc: "Suppliers demand payment in 30 days. Schools pay in 90 days. This 60-day gap is the 'Death Valley'.",
+                insight_growth_title: "THE GROWTH TRAP",
+                insight_growth_desc: "The more you sell, the more cash you need to pay upfront. Profit is not Liquidity.",
+                insight_ground_title: "Ground Truth: The Book Agent",
+                insight_ground_desc: "This simulation tracks a growing educational agency. You begin with LKR 2,000,000 in capital. Your goal is to expand without triggering a liquidity failure by understanding the connection between Income, Balance, and Cash Flow.",
+                insight_gross_margin: "Gross Margin",
+
+                // Equation Page
+                eq_case_title: "Mini-Case: The Infrastructure Crisis",
+                eq_case_desc: "To scale operations, the institute needs a LKR 1,500,000 Generator. Buying an Asset requires a financing source. Do you increase your Liabilities (Debt) or change your Asset composition (Equity/Cash)?",
+                eq_terminal_title: "Decision Terminal",
+                eq_dec_a_title: "A: Bank Loan (Debt)",
+                eq_dec_a_desc: "Asset Up (Generator) + Liability Up (Loan).",
+                eq_dec_b_title: "B: Own Cash (Equity)",
+                eq_dec_b_desc: "Asset Composition Change (Liquid to Fixed).",
+                eq_status: "Accounting Balance Status",
+
+                // Income Lab
+                inc_case_title: "Mini-Case: The Bulk Order Expansion",
+                inc_case_desc: "A massive school network requests a bulk delivery. Tweak the volume to see how 'Efficiency' (Net Profit) is calculated. Note the strict 30% Corporate Tax impact on your bottom line.",
+                inc_controls: "Growth Controls",
+                inc_vol_label: "Sales Volume (Units)",
+                inc_price_label: "Unit Price (LKR)",
+                inc_stmt_title: "Income Statement",
+                inc_rev: "Total Sales Revenue",
+                inc_cogs: "Cost of Goods Sold (COGS)",
+                inc_gp: "Gross Profit",
+                inc_opex: "Operating Expenses",
+                inc_rent: "Rent & Utilities",
+                inc_delivery: "Delivery & Logistics",
+                inc_marketing: "Marketing & Sales",
+                inc_insurance: "General Insurance",
+                inc_ebit: "EBIT (Operating Profit)",
+                inc_tax: "Corporate Tax (30%)",
+                inc_net: "NET INCOME (PAT)",
+
+                // Balance Sheet Page
+                bal_case_title: "Mini-Case: The Health Snapshot",
+                bal_case_desc: "The Balance Sheet shows where your money is 'trapped'. It ensures Assets perfectly match your Liabilities and Equity. Is your value in Cash, or is it trapped in Accounts Receivable?",
+                bal_assets: "ASSETS",
+                bal_curr_assets: "Current Assets",
+                bal_cash: "Cash at Bank",
+                bal_ar: "Accounts Receivable (Schools Owe)",
+                bal_non_curr_assets: "Non-Current Assets",
+                bal_fixed: "Fixed Equipment (Generator)",
+                bal_total_assets: "TOTAL ASSETS",
+                bal_liab_eq: "LIABILITIES & EQUITY",
+                bal_curr_liab: "Current Liabilities",
+                bal_ap: "Accounts Payable (Owed to Publisher)",
+                bal_taxes_payable: "Taxes Payable",
+                bal_loans: "Short-term Bank Loan",
+                bal_equity: "Owner's Equity",
+                bal_capital: "Paid-in Capital",
+                bal_retained: "Retained Earnings (PAT)",
+                bal_total_le: "TOTAL LIABILITIES & EQUITY",
+
+                // Cash Flow Page
+                flow_case_title: "Mini-Case: The 60-Day Death Valley",
+                flow_case_desc: "This is the moment of truth. You sold books on 90-day credit, but the publisher wants payment on Day 30. Despite massive profit on paper, can your bank survive the timing gap?",
+                flow_controls: "Timing Controls",
+                flow_col_label: "School Collection (Days)",
+                flow_pay_label: "Publisher Payment (Days)",
+                flow_status_title: "Liquidity Status",
+                flow_stmt_title: "Cash Flow Realism (Day 31)",
+                flow_open_cash: "Opening Cash Balance",
+                flow_equip: "Equipment Purchase (Cash)",
+                flow_cash_in: "Cash In: Sales Collected",
+                flow_cash_out_op: "Cash Out: Operating Costs",
+                flow_cash_out_pub: "Cash Out: Publisher Payment",
+                flow_net_bank: "NET BANK POSITION",
+                flow_tip_bankrupt: "🔴 Liquidity Warning: You are paying your publisher on Day 30, but collecting from schools on Day 90! This creates a gap where you run out of cash despite being profitable on paper. Adjust payments/collections to survive!",
+                flow_tip_solvent: "🟢 Perfect Cash Synchronization: You have delayed payments to the publisher or sped up your collections, keeping your bank account positive. Excellent management!",
+
+                // Cascade Page
+                cas_desc: "A decision in business strategy cascades down through performance metrics to create direct financial and liquidity outcomes.",
+                cas_strategy: "Strategy",
+                cas_metric: "Metric",
+                cas_outcome: "Outcome",
+                cas_card1_title: "Market Expansion",
+                cas_card1_desc: "Taking a massive 2,000 unit order to grow market share and footprint rapidly.",
+                cas_card2_title: "Inventory & Working Capital",
+                cas_card2_desc: "Handling high levels of trade receivable and supplier payable risk.",
+                cas_card3_title: "Liquidity Outcome",
+                cas_card3_desc_bankrupt: "Liquidity failure: Insolvency triggered due to critical payment timing mismatch.",
+                cas_card3_desc_solvent: "Sustainable growth: Managed timing gaps correctly to protect the bank account.",
+
+                // Workflow Page
+                wf_title: "Workflow Simulation",
+                wf_desc: "Visualise how the flow of transactions creates dynamic tension between physical stock, cash obligations, and customer credit collections.",
+                wf_order: "Order Placed",
+                wf_cogs: "COGS Due (Day 30)",
+                wf_cash: "Cash In (Day 90)",
+
+                // Breakout Page
+                br_title: "Breakout Session Questions",
+                br_desc: "Use these prompts in your groups to reflect on the dynamic relationships between P&L profit, Balance Sheet assets, and Bank Cash.",
+                br_q1_title: "Discussion #1",
+                br_q1: "If your profit is LKR 2M but bank is -LKR 2.5M, are you a success?",
+                br_q2_title: "Discussion #2",
+                br_q2: "Why is a 30% tax rate a 'Cash' problem for managers?",
+                br_q3_title: "Discussion #3",
+                br_q3: "Define 'The Death Valley' in your own words.",
+                br_q4_title: "Discussion #4",
+                br_q4: "Would you sacrifice 10% margin to get paid in 15 days?",
+                br_q5_title: "Discussion #5",
+                br_q5: "How does a bank loan hide a liquidity problem initially?"
+            },
+            si: {
+                title: "OBISL",
+                subtitle: "කළමනාකරුවන් සඳහා වන මූල්‍ය සාක්ෂරතාවය",
+                architecture: "සජීවී පද්ධති ව්‍යුහය: පොත් නියෝජිත ආකෘතිය",
+                bankPosition: "බැංකු ශේෂය",
+                netProfit: "ශුද්ධ ලාභය",
+                stable: "සමතුලිතයි",
+                error: "දෝෂ සහිතයි",
+                roundedNote: "ආසන්නතම 1,000 ට වට කර ඇත",
+                actualMoney: "අතේ ඇති සැබෑ මුදල්",
+                liquidityCrisis: "ද්‍රවශීලතා අර්බුදයක් හඳුනාගෙන ඇත",
+                solvent: "ස්ථාවරයි: මුදල් ප්‍රවාහ කාලය සාර්ථකව සම්බන්ධීකරණය කර ඇත.",
+                bankrupt: "බංකොලොත්: ඔබගේ ගෙවීම් පවතින මුදල් ප්‍රමාණය ඉක්මවා ගොස් ඇත. ව්‍යුහාත්මක බිඳවැටීමකි.",
+                
+                // Navigation / Tabs
+                tab_insight: "සිද්ධි අවබෝධය",
+                tab_equation: "ගිණුම්කරණ සමීකරණය",
+                tab_income: "ආදායම් විද්‍යාගාරය",
+                tab_balance: "ශේෂ පත්‍රය",
+                tab_flow: "මුදල් ප්‍රවාහය",
+                tab_cascade: "ක්‍රමික සබඳතාවය",
+                tab_workflow: "කාර්ය ප්‍රවාහය",
+                tab_breakout: "සාකච්ඡා ප්‍රශ්න",
+
+                // Insight Page
+                insight_model_title: "ව්‍යාපාරික ආකෘතිය",
+                insight_model_desc: "රුපියල් 1,500 බැගින් පොත් මිලදී ගෙන රුපියල් 2,500 කට විකිණීම. 40% ක ඉහළ දළ ලාභයක් සහිත නියෝජිත ආකෘතියකි.",
+                insight_timing_title: "කාල පරතරය",
+                insight_timing_desc: "සැපයුම්කරුවන් දින 30 කින් මුදල් ඉල්ලා සිටී. පාසල් ගෙවන්නේ දින 90 කිනි. මෙම දින 60 ක පරතරය 'මාරක නිම්නය' ලෙස හැඳින්වේ.",
+                insight_growth_title: "වර්ධන උගුල",
+                insight_growth_desc: "ඔබ වැඩි වැඩියෙන් විකුණන තරමට, පෙරමුණේදී ගෙවීමට වැඩි මුදලක් අවශ්‍ය වේ. ලාභය යනු ද්‍රවශීලතාවය නොවේ.",
+                insight_ground_title: "ප්‍රධාන සත්‍යය: පොත් නියෝජිතයා",
+                insight_ground_desc: "මෙම අනුකරණය මඟින් වර්ධනය වන අධ්‍යාපනික නියෝජිතායතනයක් නිරීක්ෂණය කරයි. ඔබ ආරම්භ කරන්නේ රුපියල් 2,000,000 ක ප්‍රාග්ධනයකිනි. ඔබගේ ඉලක්කය වන්නේ ආදායම්, ශේෂ පත්‍ර සහ මුදල් ප්‍රවාහ අතර ඇති සම්බන්ධය වටහාගෙන, ද්‍රවශීලතා බිඳවැටීමක් සිදු නොකර ව්‍යාපාරය වර්ධනය කිරීමයි.",
+                insight_gross_margin: "දළ ලාභ ආන්තිකය",
+
+                // Equation Page
+                eq_case_title: "කුඩා සිද්ධිය: යටිතල පහසුකම් අර්බුදය",
+                eq_case_desc: "මෙහෙයුම් වර්ධනය සඳහා රුපියල් 1,500,000 ක උත්පාදක යන්ත්‍රයක් අවශ්‍ය වේ. මෙම වත්කම ලබා ගැනීමට මූල්‍ය ප්‍රභවයක් අවශ්‍ය වේ. ඔබ ඔබේ වගකීම් (ණය) වැඩි කරනවාද නැතහොත් ඔබේ වත්කම් සංයුතිය (හිමිකම්/මුදල්) වෙනස් කරනවාද?",
+                eq_terminal_title: "තීරණ පර්යන්තය",
+                eq_dec_a_title: "A: බැංකු ණය (වගකීම්)",
+                eq_dec_a_desc: "වත්කම් ඉහළ යාම (උත්පාදක යන්ත්‍රය) + වගකීම් ඉහළ යාම (ණය).",
+                eq_dec_b_title: "B: තමන්ගේ මුදල් (හිමිකම්)",
+                eq_dec_b_desc: "වත්කම්වල සංයුතිය වෙනස් වීම (ද්‍රවශීලතාවයේ සිට ස්ථාවර දක්වා).",
+                eq_status: "ගිණුම්කරණ සමතුලිතතා තත්ත්වය",
+
+                // Income Lab
+                inc_case_title: "කුඩා සිද්ධිය: තොග ඇණවුම් ව්‍යාප්තිය",
+                inc_case_desc: "විශාල පාසල් ජාලයක් තොග ඇණවුමක් ඉල්ලා සිටී. පරිමාව වෙනස් කිරීමෙන් 'කාර්යක්ෂමතාවය' (ශුද්ධ ලාභය) ගණනය වන ආකාරය බලන්න. ඔබගේ ශුද්ධ ප්‍රතිලාභයට 30% ක සංගත බදු බලපෑම නිරීක්ෂණය කරන්න.",
+                inc_controls: "වර්ධන පාලකයන්",
+                inc_vol_label: "විකුණුම් පරිමාව (ඒකක)",
+                inc_price_label: "ඒකකයක මිල (රුපියල්)",
+                inc_stmt_title: "ආදායම් ප්‍රකාශය",
+                inc_rev: "මුළු විකුණුම් ආදායම",
+                inc_cogs: "විකුණුම් පිරිවැය (COGS)",
+                inc_gp: "දළ ලාභය",
+                inc_opex: "මෙහෙයුම් වියදම්",
+                inc_rent: "කුලිය සහ පොදු පහසුකම්",
+                inc_delivery: "ප්‍රවාහන සහ සැපයුම් වියදම්",
+                inc_marketing: "අලෙවිකරණ සහ විකුණුම් වියදම්",
+                inc_insurance: "පොදු රක්ෂණ වියදම්",
+                inc_ebit: "මෙහෙයුම් ලාභය (EBIT)",
+                inc_tax: "සංගත බද්ද (30%)",
+                inc_net: "ශුද්ධ ලාභය (PAT)",
+
+                // Balance Sheet Page
+                bal_case_title: "කුඩා සිද්ධිය: මූල්‍ය සෞඛ්‍ය තත්ත්වය",
+                bal_case_desc: "ශේෂ පත්‍රය මඟින් ඔබගේ මුදල් 'රැඳී ඇති' ස්ථානය පෙන්වයි. එයින් වත්කම්, වගකීම් සහ හිමිකම්වලට පරිපූර්ණව සමාන වන බව තහවුරු කරයි. ඔබ සතු වටිනාකම මුදල් ලෙස තිබේද, නැතහොත් ලැබිය යුතු ගිණුම්වල සිරවී තිබේද?",
+                bal_assets: "වත්කම්",
+                bal_curr_assets: "ජංගම වත්කම්",
+                bal_cash: "බැංකුවේ ඇති මුදල්",
+                bal_ar: "ලැබිය යුතු ගිණුම් (පාසල්වලින් ලැබීමට ඇති)",
+                bal_non_curr_assets: "ජංගම නොවන වත්කම්",
+                bal_fixed: "ස්ථාවර උපකරණ (උත්පාදක යන්ත්‍රය)",
+                bal_total_assets: "මුළු වත්කම්",
+                bal_liab_eq: "වගකීම් සහ හිමිකම්",
+                bal_curr_liab: "ජංගම වගකීම්",
+                bal_ap: "ගෙවිය යුතු ගිණුම් (ප්‍රකාශකයාට ගෙවිය යුතු)",
+                bal_taxes_payable: "ගෙවිය යුතු බදු",
+                bal_loans: "කෙටිකාලීන බැංකු ණය",
+                bal_equity: "හිමිකරුවන්ගේ හිමිකම්",
+                bal_capital: "ගෙවූ ප්‍රාග්ධනය",
+                bal_retained: "රඳවා ගත් ලාභය (PAT)",
+                bal_total_le: "මුළු වගකීම් සහ හිමිකම්",
+
+                // Cash Flow Page
+                flow_case_title: "කුඩා සිද්ධිය: දින 60 ක මාරක නිම්නය",
+                flow_case_desc: "මෙය සත්‍යය හෙළි වන මොහොතයි. ඔබ දින 90 ක ණය පදනම මත පොත් අලෙවි කර ඇති නමුත් ප්‍රකාශකයාට දින 30 කින් මුදල් ගෙවිය යුතුය. ලේඛනවල විශාල ලාභයක් පෙන්වුවද, මෙම කාල පරතරයෙන් බේරීමට ඔබේ බැංකු ගිණුමට හැකිද?",
+                flow_controls: "කාල පාලනය",
+                flow_col_label: "පාසලෙන් මුදල් ලැබෙන කාලය (දින)",
+                flow_pay_label: "ප්‍රකාශකයාට මුදල් ගෙවන කාලය (දින)",
+                flow_status_title: "ද්‍රවශීලතා තත්ත්වය",
+                flow_stmt_title: "සත්‍ය මුදල් ප්‍රවාහය (31 වන දිනය)",
+                flow_open_cash: "ආරම්භක මුදල් ශේෂය",
+                flow_equip: "උපකරණ මිලදී ගැනීම (මුදලින්)",
+                flow_cash_in: "ලැබුණු මුදල්: විකුණුම් එකතු කිරීම්",
+                flow_cash_out_op: "පිටතට ගිය මුදල්: මෙහෙයුම් වියදම්",
+                flow_cash_out_pub: "පිටතට ගිය මුදල්: ප්‍රකාශකයාට ගෙවීම්",
+                flow_net_bank: "ශුද්ධ බැංකු තත්ත්වය",
+                flow_tip_bankrupt: "🔴 ද්‍රවශීලතා අර්බුදය: ඔබ ප්‍රකාශකයාට දින 30 කින් ගෙවන අතර පාසල්වලින් මුදල් ලැබෙන්නේ දින 90 කිනි! ලේඛනගතව ලාභදායී වුවද බැංකුවේ මුදල් අවසන් වීමට මෙය හේතු වේ. ගෙවීම්/එකතු කිරීම් වෙනස් කරන්න!",
+                flow_tip_solvent: "🟢 පරිපූර්ණ මුදල් ගැලපීම: ඔබ ප්‍රකාශකයාට ගෙවීම් ප්‍රමාද කර හෝ එකතු කිරීම් වේගවත් කර ඇත. බැංකු ගිණුම සාර්ථකව පාලනය කර ඇත. විශිෂ්ට කළමනාකරණයකි!",
+
+                // Cascade Page
+                cas_desc: "ව්‍යාපාරික උපායමාර්ගයේ ගන්නා තීරණයක්, මූල්‍ය කාර්ය සාධන මිනුම් හරහා ක්‍රමයෙන් ගලා ගොස් සෘජු මූල්‍ය සහ ද්‍රවශීලතා ප්‍රතිඵල නිර්මාණය කරයි.",
+                cas_strategy: "උපායමාර්ගය",
+                cas_metric: "මිනුම",
+                cas_outcome: "ප්‍රතිඵලය",
+                cas_card1_title: "වෙළෙඳපොළ ව්‍යාප්තිය",
+                cas_card1_desc: "වෙළෙඳපොළ කොටස සහ ව්‍යාප්තිය වේගයෙන් වර්ධනය කිරීම සඳහා විශාල ඇණවුමක් ලබා ගැනීම.",
+                cas_card2_title: "තොග සහ කාරක ප්‍රාග්ධනය",
+                cas_card2_desc: "ලැබිය යුතු වෙළඳ ණය සහ සැපයුම්කරුවන්ට ගෙවිය යුතු ණය අවදානම කළමනාකරණය කිරීම.",
+                cas_card3_title: "ද්‍රවශීලතා ප්‍රතිඵලය",
+                cas_card3_desc_bankrupt: "ද්‍රවශීලතා බිඳවැටීම: ගෙවීම් කාල පරතරය නොගැලපීම හේතුවෙන් බංකොලොත් භාවය ඇතිවේ.",
+                cas_card3_desc_solvent: "තිරසාර වර්ධනය: බැංකු ගිණුම ආරක්ෂා කර ගැනීම සඳහා කාල පරතරය නිවැරදිව පාලනය කර ඇත.",
+
+                // Workflow Page
+                wf_title: "කාර්ය ප්‍රවාහ අනුකරණය",
+                wf_desc: "ගනුදෙනු ගලායාම මඟින් භෞතික තොග, මුදල් බැඳීම් සහ ලැබිය යුතු ණය අතර ගතික ආතතියක් ඇති කරන්නේ කෙසේදැයි දෘශ්‍යමාන කරන්න.",
+                wf_order: "ඇණවුම ලැබීම",
+                wf_cogs: "පිරිවැය ගෙවිය යුතුය (දින 30)",
+                wf_cash: "මුදල් ලැබීම (දින 90)",
+
+                // Breakout Page
+                br_title: "කණ්ඩායම් සාකච්ඡා ප්‍රශ්න",
+                br_desc: "ලාභ සහ අලාභ ගිණුමේ ලාභය, ශේෂ පත්‍රයේ වත්කම් සහ බැංකුවේ ඇති මුදල් අතර පවතින ගතික සබඳතා පිළිබඳව කණ්ඩායම් සාකච්ඡාවලදී අවධානය යොමු කරන්න.",
+                br_q1_title: "සාකච්ඡාව #1",
+                br_q1: "ඔබේ ලාභය රුපියල් මිලියන 2ක් වන විට බැංකු ශේෂය සෘණ රුපියල් මිලියන 2.5ක් නම්, ඔබ සාර්ථකද?",
+                br_q2_title: "සාකච්ඡාව #2",
+                br_q2: "30% ක සංගත බදු අනුපාතයක් කළමනාකරුවන්ට 'මුදල්' පිළිබඳ ගැටලුවක් වන්නේ ඇයි?",
+                br_q3_title: "සාකච්ඡාව #3",
+                br_q3: "'මාරක නිම්නය' (Death Valley) ඔබේ වචනවලින් විස්තර කරන්න.",
+                br_q4_title: "සාකච්ඡාව #4",
+                br_q4: "දින 15කින් මුදල් ලබා ගැනීම සඳහා 10% ක ලාභ ආන්තිකයක් කැප කිරීමට ඔබ සූදානම්ද?",
+                br_q5_title: "සාකච්ඡාව #5",
+                br_q5: "බැංකු ණයක් මඟින් ආරම්භයේදී ද්‍රවශීලතා ගැටලුවක් සඟවන්නේ කෙසේද?"
+            }
+        };
+
+        // Icon Assets using SVG
         const IconInsight = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>;
         const IconScale = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h18"/></svg>;
         const IconPAndL = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
         const IconSheet = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 9v12"/><path d="M15 9v12"/></svg>;
         const IconFlow = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
         const IconCascade = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
-        const IconWorkflow = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg>;
+        const IconWorkflow = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" /><path d="M7 8h10M7 12h10M7 16h10" /></svg>;
         const IconDiscussion = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>;
         const IconPrint = () => <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
 
         const App = () => {
+            // Language state: 'en' (English) or 'si' (Sinhala)
+            const [lang, setLang] = useState('en');
             const [activeTab, setActiveTab] = useState('insight');
             
-            const [volume, setVolume] = useState(100);
+            const [volume, setVolume] = useState(2000);
             const [price, setPrice] = useState(2500);
             const [payDays, setPayDays] = useState(30);
             const [collectDays, setCollectDays] = useState(90);
             const [genChoice, setGenChoice] = useState(null); 
 
-            // Hard constraint: Round all calculations to nearest 1,000 for cognitive ease.
+            // Hard constraint helper: Round all calculations to nearest 1,000 for cognitive ease
             const round = (val) => Math.round(val / 1000) * 1000;
 
             const stats = useMemo(() => {
@@ -110,9 +415,9 @@
                 const MARKETING = 25000;
                 const INSURANCE = 5000;
                 const INITIAL_CAPITAL = 2000000;
-                const TAX_RATE = 0.30; // 30% Tax rate
+                const TAX_RATE = 0.30; // 30% Corporate Tax
 
-                // Income Statement Maths
+                // Income Statement Calculations
                 const rev = round(volume * price);
                 const cogs = round(volume * UNIT_COST);
                 const grossProfit = rev - cogs;
@@ -127,18 +432,18 @@
                 let loanVal = genChoice === 'loan' ? 1500000 : 0;
                 let cashSpentOnEquip = genChoice === 'cash' ? 1500000 : 0;
 
-                // Dynamic Balance Sheet Mapping (Depends on Timing)
-                const ar = collectDays <= 30 ? 0 : rev; // If collected within 30 days, AR is 0
-                const ap = payDays <= 30 ? 0 : cogs;    // If paid within 30 days, AP is 0
-                const taxesPayable = tax;               // Assume taxes are filed but not paid instantly in Month 1
-                const equity = INITIAL_CAPITAL + net;   // Retained earnings add up
+                // Dynamic Balance Sheet Mapping
+                const ar = collectDays <= 30 ? 0 : rev; // If collected within 30 days, AR is 0 on Day 31
+                const ap = payDays <= 30 ? 0 : cogs;    // If paid within 30 days, AP is 0 on Day 31
+                const taxesPayable = tax;               // Assumed to be accrued but unpaid instantly on month end
+                const equity = INITIAL_CAPITAL + net;
 
                 // Day 31 Cash Flow Snapshot
                 const cashIn = collectDays <= 30 ? rev : 0;
-                const cashOut = (payDays <= 30 ? cogs : 0) + opex; // OPEX is paid in cash
+                const cashOut = (payDays <= 30 ? cogs : 0) + opex; 
                 const bankBalance = INITIAL_CAPITAL - cashSpentOnEquip + cashIn - cashOut;
 
-                // Accounting Equation Guarantee: A = L + E
+                // Double Entry Guarantee: Assets = Liabilities + Equity
                 const totalAssets = bankBalance + ar + equipVal;
                 const totalLE = loanVal + ap + taxesPayable + equity;
 
@@ -150,402 +455,490 @@
                 };
             }, [volume, price, payDays, collectDays, genChoice]);
 
+            // Dictionary reference
+            const s = translations[lang];
+
+            // Render helper for currency
+            const formatCurrency = (val) => {
+                const prefix = lang === 'en' ? 'LKR ' : 'රු. ';
+                if (val < 0) {
+                    return `(${prefix}${Math.abs(val).toLocaleString()})`;
+                }
+                return `${prefix}${val.toLocaleString()}`;
+            };
+
             return (
-                <div className="flex min-h-screen">
-                    <aside className="sidebar no-print fixed left-0 top-0 h-screen w-20 flex flex-col items-center py-8 glass z-50">
-                        <div className="mb-10 text-emerald-500 font-black text-xl tracking-tighter">OB</div>
-                        <nav className="flex-1 space-y-6 overflow-y-auto no-scrollbar">
-                            <NavBtn icon={<IconInsight />} label="Case Insight" active={activeTab === 'insight'} onClick={() => setActiveTab('insight')} />
-                            <NavBtn icon={<IconScale />} label="The Equation" active={activeTab === 'equation'} onClick={() => setActiveTab('equation')} />
-                            <NavBtn icon={<IconPAndL />} label="Income Lab" active={activeTab === 'income'} onClick={() => setActiveTab('income')} />
-                            <NavBtn icon={<IconSheet />} label="Balance View" active={activeTab === 'balance'} onClick={() => setActiveTab('balance')} />
-                            <NavBtn icon={<IconFlow />} label="Cash Reality" active={activeTab === 'flow'} onClick={() => setActiveTab('flow')} />
-                            <NavBtn icon={<IconCascade />} label="The Cascade" active={activeTab === 'cascade'} onClick={() => setActiveTab('cascade')} />
-                            <NavBtn icon={<IconWorkflow />} label="Workflow Sim" active={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} />
-                            <NavBtn icon={<IconDiscussion />} label="Breakout" active={activeTab === 'breakout'} onClick={() => setActiveTab('breakout')} />
+                <div className={`flex flex-col md:flex-row min-h-screen ${lang === 'si' ? 'font-sinhala' : 'font-sans'}`}>
+                    {/* Desktop Sidebar Navigation */}
+                    <aside className="sidebar no-print fixed left-0 top-0 h-screen w-24 hidden md:flex flex-col items-center py-8 glass z-50">
+                        <div className="mb-8 text-emerald-500 font-black text-2xl tracking-tighter">OB</div>
+                        <nav className="flex-1 space-y-4 overflow-y-auto no-scrollbar w-full px-2">
+                            <NavBtn icon={<IconInsight />} label={s.tab_insight} active={activeTab === 'insight'} onClick={() => setActiveTab('insight')} />
+                            <NavBtn icon={<IconScale />} label={s.tab_equation} active={activeTab === 'equation'} onClick={() => setActiveTab('equation')} />
+                            <NavBtn icon={<IconPAndL />} label={s.tab_income} active={activeTab === 'income'} onClick={() => setActiveTab('income')} />
+                            <NavBtn icon={<IconSheet />} label={s.tab_balance} active={activeTab === 'balance'} onClick={() => setActiveTab('balance')} />
+                            <NavBtn icon={<IconFlow />} label={s.tab_flow} active={activeTab === 'flow'} onClick={() => setActiveTab('flow')} />
+                            <NavBtn icon={<IconCascade />} label={s.tab_cascade} active={activeTab === 'cascade'} onClick={() => setActiveTab('cascade')} />
+                            <NavBtn icon={<IconWorkflow />} label={s.tab_workflow} active={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} />
+                            <NavBtn icon={<IconDiscussion />} label={s.tab_breakout} active={activeTab === 'breakout'} onClick={() => setActiveTab('breakout')} />
                         </nav>
-                        <button onClick={() => window.print()} className="mt-auto p-4 text-slate-500 hover:text-emerald-400">
+                        <button onClick={() => window.print()} className="mt-auto p-4 text-slate-400 hover:text-emerald-400 transition-colors">
                             <IconPrint />
                         </button>
                     </aside>
 
-                    <main className="flex-1 ml-20">
-                        <header className="sticky top-0 z-40 glass px-10 py-5 flex justify-between items-center no-print border-b border-white/5">
-                            <div>
-                                <h1 className="text-sm font-bold tracking-[0.2em] text-emerald-400 uppercase">OBISL Financial Literacy for Managers practicum</h1>
-                                <p className="text-[10px] text-slate-400 uppercase font-semibold mt-1 tracking-wider">Live System Architecture: Book Agency Model</p>
+                    {/* Main Content Area */}
+                    <div className="flex-1 md:ml-24 flex flex-col min-h-screen">
+                        
+                        {/* Unified Sticky Header */}
+                        <header className="sticky top-0 z-40 glass px-4 md:px-10 py-4 flex flex-col sm:flex-row justify-between items-center no-print gap-4 border-b border-white/5">
+                            <div className="text-center sm:text-left">
+                                <h1 className="text-xs md:text-sm font-bold tracking-[0.15em] text-emerald-400 uppercase">
+                                    {s.title} {s.subtitle}
+                                </h1>
+                                <p className="text-[10px] text-slate-400 uppercase font-semibold mt-0.5 tracking-wider">
+                                    {s.architecture}
+                                </p>
                             </div>
-                            <div className="flex items-center space-x-8">
-                                <VitalItem label="BANK POSITION (බැංකු ශේෂය)" value={stats.cash} color={stats.isBankrupt ? "text-red-500 animate-pulse" : "text-blue-400"} />
-                                <VitalItem label="NET PROFIT (ශුද්ධ ලාභය)" value={stats.net} color="text-emerald-400" />
+                            
+                            <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-6">
+                                <VitalItem label={s.bankPosition} value={stats.cash} color={stats.isBankrupt ? "text-red-500 animate-pulse" : "text-blue-400"} formatter={formatCurrency} />
+                                <VitalItem label={s.netProfit} value={stats.net} color="text-emerald-400" formatter={formatCurrency} />
+                                
+                                {/* Quick Action buttons: Language and Print */}
+                                <div className="flex items-center gap-2 ml-2">
+                                    {/* Pure English and Sinhala Toggle */}
+                                    <div className="flex bg-slate-900 border border-white/10 rounded-full p-1 shadow-inner">
+                                        <button 
+                                            onClick={() => setLang('en')} 
+                                            className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${lang === 'en' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                        >
+                                            EN
+                                        </button>
+                                        <button 
+                                            onClick={() => setLang('si')} 
+                                            className={`px-3 py-1 rounded-full text-[10px] font-bold font-sinhala transition-all ${lang === 'si' ? 'bg-emerald-500 text-white shadow-md' : 'text-slate-400 hover:text-white'}`}
+                                        >
+                                            සිංහල
+                                        </button>
+                                    </div>
+
+                                    {/* Mobile Print Button */}
+                                    <button onClick={() => window.print()} className="md:hidden p-2 bg-slate-900 hover:bg-slate-800 text-slate-300 border border-white/10 rounded-full transition-all">
+                                        <IconPrint />
+                                    </button>
+                                </div>
                             </div>
                         </header>
 
-                        <div className="p-10 max-w-7xl mx-auto space-y-12">
-                            {/* Tabs Routing */}
-                            {activeTab === 'insight' && <TabInsight />}
-
-                            {activeTab === 'equation' && (
-                                <SectionWrapper 
-                                    title="Mini-Case: The Infrastructure Crisis" 
-                                    titleSi="යටිතල පහසුකම් අර්බුදය"
-                                    description="To scale operations, the institute needs a LKR 1,500,000 Generator. Buying an Asset requires a financing source. Do you increase your Liabilities (Debt) or change your Asset composition (Equity/Cash)?"
-                                    descriptionSi="මෙහෙයුම් වර්ධනය සඳහා රුපියල් 1,500,000 ක උත්පාදක යන්ත්‍රයක් අවශ්‍ය වේ. මෙම වත්කම ලබා ගැනීමට නම් මූල්‍ය ප්‍රභවයක් අවශ්‍ය වේ. ඔබ වගකීම් වැඩි කරනවාද නැතහොත් ඔබ සතු මුදල් භාවිතා කරනවාද?"
-                                >
-                                    <TabEquation genChoice={genChoice} setGenChoice={setGenChoice} stats={stats} />
-                                </SectionWrapper>
-                            )}
-
-                            {activeTab === 'income' && (
-                                <SectionWrapper 
-                                    title="Mini-Case: The Bulk Order Expansion" 
-                                    titleSi="තොග ඇණවුම් ව්‍යාප්තිය"
-                                    description="A massive school network requests a bulk delivery. Tweak the volume to see how 'Efficiency' (Net Profit) is calculated. Note the strict 30% Corporate Tax impact on your bottom line."
-                                    descriptionSi="විශාල පාසල් ජාලයක් තොග ඇණවුමක් ඉල්ලා සිටී. පරිමාව වෙනස් කිරීමෙන් ලාභය ගණනය වන ආකාරය බලන්න. මෙහිදී 30% ක සංගත බදු බලපෑම නිරීක්ෂණය කරන්න."
-                                >
-                                    <TabIncome volume={volume} setVolume={setVolume} price={price} setPrice={setPrice} stats={stats} />
-                                </SectionWrapper>
-                            )}
-
-                            {activeTab === 'balance' && (
-                                <SectionWrapper 
-                                    title="Mini-Case: The Health Snapshot" 
-                                    titleSi="මූල්‍ය සෞඛ්‍ය තත්ත්වය"
-                                    description="The Balance Sheet shows where your money is 'trapped'. It ensures Assets perfectly match your Liabilities and Equity. Is your value in Cash, or is it trapped in Accounts Receivable?"
-                                    descriptionSi="ශේෂ පත්‍රය ඔබගේ මුදල් දැනට රැඳී පවතින ස්ථානය පෙන්වයි. වත්කම් සෑම විටම වගකීම් සහ හිමිකම්වලට සමාන වේ. වටිනාකම මුදල් ලෙස තිබේද, නැතිනම් පාරිභෝගිකයින්ගෙන් ලැබීමට තිබේද?"
-                                >
-                                    <TabBalance stats={stats} />
-                                </SectionWrapper>
-                            )}
-
-                            {activeTab === 'flow' && (
-                                <SectionWrapper 
-                                    title="Mini-Case: The 60-Day Death Valley" 
-                                    titleSi="දින 60 ක මාරක නිම්නය"
-                                    description="This is the moment of truth. You sold books on 90-day credit, but the publisher wants payment on Day 30. Despite massive profit on paper, can your bank survive the timing gap?"
-                                    descriptionSi="ඔබ දින 90 ක ණයට විකුණුවද, ප්‍රකාශකයාට දින 30 කින් ගෙවිය යුතුය. ලේඛනවල ලාභයක් තිබුණද, එම කාල පරතරයට මුහුණ දීමට ඔබේ බැංකු ගිණුමට හැකිද?"
-                                >
-                                    <TabFlow payDays={payDays} setPayDays={setPayDays} collectDays={collectDays} setCollectDays={setCollectDays} stats={stats} />
-                                </SectionWrapper>
-                            )}
-
-                            {activeTab === 'cascade' && <TabCascade stats={stats} />}
-                            {activeTab === 'workflow' && <TabWorkflow stats={stats} />}
-                            {activeTab === 'breakout' && <TabBreakout />}
+                        {/* Mobile Swipeable Tab Bar (Scrollable horizontally) */}
+                        <div className="md:hidden flex overflow-x-auto whitespace-nowrap space-x-1.5 p-3 bg-slate-950/90 border-b border-white/10 sticky top-[73px] sm:top-[61px] z-30 no-scrollbar no-print">
+                            <MobileTabBtn label={s.tab_insight} active={activeTab === 'insight'} onClick={() => setActiveTab('insight')} />
+                            <MobileTabBtn label={s.tab_equation} active={activeTab === 'equation'} onClick={() => setActiveTab('equation')} />
+                            <MobileTabBtn label={s.tab_income} active={activeTab === 'income'} onClick={() => setActiveTab('income')} />
+                            <MobileTabBtn label={s.tab_balance} active={activeTab === 'balance'} onClick={() => setActiveTab('balance')} />
+                            <MobileTabBtn label={s.tab_flow} active={activeTab === 'flow'} onClick={() => setActiveTab('flow')} />
+                            <MobileTabBtn label={s.tab_cascade} active={activeTab === 'cascade'} onClick={() => setActiveTab('cascade')} />
+                            <MobileTabBtn label={s.tab_workflow} active={activeTab === 'workflow'} onClick={() => setActiveTab('workflow')} />
+                            <MobileTabBtn label={s.tab_breakout} active={activeTab === 'breakout'} onClick={() => setActiveTab('breakout')} />
                         </div>
-                    </main>
+
+                        {/* Screen Content Wrapper */}
+                        <div className="p-4 md:p-10 max-w-7xl w-full mx-auto space-y-12 flex-1 pb-12">
+                            
+                            {/* TAB: INSIGHT */}
+                            {activeTab === 'insight' && (
+                                <div className="space-y-8 animate-fadeIn">
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <InsightCard title={s.insight_model_title} color="border-emerald-500" desc={s.insight_model_desc} />
+                                        <InsightCard title={s.insight_timing_title} color="border-red-500" desc={s.insight_timing_desc} />
+                                        <InsightCard title={s.insight_growth_title} color="border-blue-500" desc={s.insight_growth_desc} />
+                                    </div>
+                                    <div className="glass p-6 md:p-10 rounded-[32px] flex flex-col lg:flex-row items-center gap-10">
+                                        <div className="flex-1 space-y-4 text-center lg:text-left">
+                                            <h2 className="text-2xl md:text-3xl font-black uppercase tracking-tight text-white">{s.insight_ground_title}</h2>
+                                            <p className="text-slate-300 text-sm md:text-base leading-relaxed">{s.insight_ground_desc}</p>
+                                        </div>
+                                        <div className="w-52 h-52 bg-slate-900 rounded-full border-8 border-slate-800 flex items-center justify-center text-center p-4 shadow-2xl shrink-0">
+                                            <span className="text-emerald-500 font-black text-3xl">
+                                                40%<br/>
+                                                <span className="text-[10px] text-slate-400 uppercase tracking-widest font-sans font-normal block mt-1">{s.insight_gross_margin}</span>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB: EQUATION */}
+                            {activeTab === 'equation' && (
+                                <SectionWrapper title={s.eq_case_title} description={s.eq_case_desc}>
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <div className="lg:col-span-1 space-y-4">
+                                            <div className="card-neo p-6 rounded-3xl space-y-4">
+                                                <h3 className="text-emerald-400 font-bold uppercase text-xs tracking-widest border-b border-white/5 pb-2">
+                                                    {s.eq_terminal_title}
+                                                </h3>
+                                                <button 
+                                                    onClick={() => setGenChoice('loan')} 
+                                                    className={`w-full p-5 rounded-2xl border transition-all text-left ${genChoice === 'loan' ? 'bg-blue-500/20 border-blue-500 shadow-xl' : 'bg-slate-800/40 border-white/10 opacity-70 hover:opacity-100'}`}
+                                                >
+                                                    <h4 className="font-bold text-sm text-white">{s.eq_dec_a_title}</h4>
+                                                    <p className="text-[11px] text-slate-300 mt-2">{s.eq_dec_a_desc}</p>
+                                                </button>
+                                                <button 
+                                                    onClick={() => setGenChoice('cash')} 
+                                                    className={`w-full p-5 rounded-2xl border transition-all text-left ${genChoice === 'cash' ? 'bg-emerald-500/20 border-emerald-500 shadow-xl' : 'bg-slate-800/40 border-white/10 opacity-70 hover:opacity-100'}`}
+                                                >
+                                                    <h4 className="font-bold text-sm text-white">{s.eq_dec_b_title}</h4>
+                                                    <p className="text-[11px] text-slate-300 mt-2">{s.eq_dec_b_desc}</p>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="lg:col-span-2 flex flex-col items-center justify-center space-y-10 card-neo p-8 rounded-3xl">
+                                            <div className="relative w-full max-w-md py-4">
+                                                <div className="h-3 bg-slate-700 w-full rounded-full relative shadow-inner">
+                                                    <div className="absolute left-0 -top-8 text-[10px] font-black text-blue-400 uppercase tracking-widest text-center">
+                                                        {s.bal_assets}
+                                                    </div>
+                                                    <div className="absolute right-0 -top-8 text-[10px] font-black text-emerald-400 uppercase tracking-widest text-center">
+                                                        {s.bal_liab_eq}
+                                                    </div>
+                                                </div>
+                                                <div className="flex justify-between mt-8 gap-4">
+                                                    <div className="flex-1 h-32 bg-blue-500/10 border-2 border-blue-500/30 rounded-2xl flex flex-col items-center justify-center p-3 shadow-lg">
+                                                        <span className="text-xs text-slate-400 mb-1 font-bold">{s.bal_assets}</span>
+                                                        <span className="text-lg md:text-xl font-mono font-bold text-blue-400">{formatCurrency(stats.totalAssets)}</span>
+                                                    </div>
+                                                    <div className="flex-1 h-32 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-2xl flex flex-col items-center justify-center p-3 shadow-lg">
+                                                        <span className="text-xs text-slate-400 mb-1 font-bold">{lang === 'en' ? 'L + EQ' : 'වගකීම් + හිමිකම්'}</span>
+                                                        <span className="text-lg md:text-xl font-mono font-bold text-emerald-400">{formatCurrency(stats.totalLE)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div className="text-center pt-4 border-t border-white/5 w-full">
+                                                <p className="text-[10px] text-slate-400 uppercase tracking-[0.2em] font-black">
+                                                    {s.eq_status}: <span className={stats.totalAssets === stats.totalLE ? "text-emerald-400" : "text-red-500"}>{stats.totalAssets === stats.totalLE ? s.stable : s.error}</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SectionWrapper>
+                            )}
+
+                            {/* TAB: INCOME */}
+                            {activeTab === 'income' && (
+                                <SectionWrapper title={s.inc_case_title} description={s.inc_case_desc}>
+                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                                        <div className="lg:col-span-1 card-neo p-6 rounded-3xl space-y-8 no-print">
+                                            <h3 className="text-emerald-400 font-bold uppercase text-xs tracking-widest border-b border-white/5 pb-2">
+                                                {s.inc_controls}
+                                            </h3>
+                                            <SliderItem label={s.inc_vol_label} value={volume} min={100} max={5000} step={100} onChange={setVolume} />
+                                            <SliderItem label={s.inc_price_label} value={price} min={1500} max={5000} step={50} onChange={setPrice} color="bg-blue-500" />
+                                        </div>
+                                        <div className="lg:col-span-3 card-neo p-6 md:p-10 rounded-[32px] shadow-2xl bg-slate-900/40 border border-white/5">
+                                            <header className="border-b border-white/10 pb-6 mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                                <div>
+                                                    <h2 className="text-2xl font-bold tracking-tight text-white">{s.inc_stmt_title}</h2>
+                                                </div>
+                                                <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-3 py-1 rounded-full uppercase tracking-widest border border-slate-700">
+                                                    {s.roundedNote}
+                                                </span>
+                                            </header>
+                                            <div className="space-y-4 max-w-2xl mx-auto">
+                                                <DocRow label={s.inc_rev} value={stats.rev} isBold formatter={formatCurrency} />
+                                                <DocRow label={s.inc_cogs} value={-stats.cogs} color="text-red-400" formatter={formatCurrency} />
+                                                <div className="h-[1px] bg-white/10 my-2"></div>
+                                                <DocRow label={s.inc_gp} value={stats.grossProfit} isBold color="text-emerald-400" formatter={formatCurrency} />
+                                                
+                                                <div className="py-4 space-y-3 border-y border-white/5 my-6">
+                                                    <SectionHeader label={s.inc_opex} />
+                                                    <DocRow label={s.inc_rent} value={-50000} formatter={formatCurrency} />
+                                                    <DocRow label={s.inc_delivery} value={-stats.logistics} formatter={formatCurrency} />
+                                                    <DocRow label={s.inc_marketing} value={-25000} formatter={formatCurrency} />
+                                                    <DocRow label={s.inc_insurance} value={-5000} formatter={formatCurrency} />
+                                                </div>
+                                                
+                                                <div className="pt-4 space-y-3">
+                                                    <DocRow label={s.inc_ebit} value={stats.ebit} isBold formatter={formatCurrency} />
+                                                    <DocRow label={s.inc_tax} value={-stats.tax} color="text-red-400" formatter={formatCurrency} />
+                                                    <div className="p-4 md:p-6 bg-emerald-500/10 rounded-2xl mt-4 border border-emerald-500/20 shadow-inner">
+                                                        <DocRow label={s.inc_net} value={stats.net} isLarge isBold color="text-emerald-400" formatter={formatCurrency} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SectionWrapper>
+                            )}
+
+                            {/* TAB: BALANCE VIEW */}
+                            {activeTab === 'balance' && (
+                                <SectionWrapper title={s.bal_case_title} description={s.bal_case_desc}>
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                                        
+                                        {/* Assets Column */}
+                                        <div className="card-neo p-6 md:p-10 rounded-[32px] border-t-4 border-t-blue-500 shadow-xl border border-white/5">
+                                            <h3 className="text-blue-400 font-black uppercase text-xs tracking-widest border-b border-white/5 pb-4 mb-6">
+                                                {s.bal_assets}
+                                            </h3>
+                                            
+                                            <div className="space-y-6">
+                                                <SectionHeader label={s.bal_curr_assets} />
+                                                <DocRow label={s.bal_cash} value={stats.cash} formatter={formatCurrency} />
+                                                <DocRow label={s.bal_ar} value={stats.ar} color="text-orange-400" formatter={formatCurrency} />
+                                                
+                                                <div className="pt-4">
+                                                    <SectionHeader label={s.bal_non_curr_assets} />
+                                                    <DocRow label={s.bal_fixed} value={stats.equipment} formatter={formatCurrency} />
+                                                </div>
+                                                
+                                                <div className="pt-6 border-t border-white/10">
+                                                    <DocRow label={s.bal_total_assets} value={stats.totalAssets} isBold isLarge color="text-blue-400" formatter={formatCurrency} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Liabilities & Equity Column */}
+                                        <div className="card-neo p-6 md:p-10 rounded-[32px] border-t-4 border-t-emerald-500 shadow-xl border border-white/5">
+                                            <h3 className="text-emerald-400 font-black uppercase text-xs tracking-widest border-b border-white/5 pb-4 mb-6">
+                                                {s.bal_liab_eq}
+                                            </h3>
+                                            
+                                            <div className="space-y-6">
+                                                <SectionHeader label={s.bal_curr_liab} />
+                                                <DocRow label={s.bal_ap} value={stats.ap} color="text-red-400" formatter={formatCurrency} />
+                                                <DocRow label={s.bal_taxes_payable} value={stats.taxesPayable} color="text-red-400" formatter={formatCurrency} />
+                                                <DocRow label={s.bal_loans} value={stats.loans} formatter={formatCurrency} />
+                                                
+                                                <div className="pt-4">
+                                                    <SectionHeader label={s.bal_equity} />
+                                                    <DocRow label={s.bal_capital} value={2000000} formatter={formatCurrency} />
+                                                    <DocRow label={s.bal_retained} value={stats.net} color="text-emerald-400" formatter={formatCurrency} />
+                                                </div>
+                                                
+                                                <div className="pt-6 border-t border-white/10">
+                                                    <DocRow label={s.bal_total_le} value={stats.totalLE} isBold isLarge color="text-emerald-400" formatter={formatCurrency} />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+                                </SectionWrapper>
+                            )}
+
+                            {/* TAB: CASH REALITY */}
+                            {activeTab === 'flow' && (
+                                <SectionWrapper title={s.flow_case_title} description={s.flow_case_desc}>
+                                    <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                                        <div className="lg:col-span-1 card-neo p-6 rounded-3xl space-y-8 no-print">
+                                            <h3 className="text-blue-400 font-bold uppercase text-xs tracking-widest border-b border-white/5 pb-2">
+                                                {s.flow_controls}
+                                            </h3>
+                                            <SliderItem label={s.flow_col_label} value={collectDays} min={0} max={120} step={15} onChange={setCollectDays} color="bg-orange-500" />
+                                            <SliderItem label={s.flow_pay_label} value={payDays} min={0} max={120} step={15} onChange={setPayDays} color="bg-purple-500" />
+                                            
+                                            {/* Dynamic Suggestive Tip Panel */}
+                                            <div className={`p-5 rounded-2xl border transition-all text-xs leading-relaxed ${stats.isBankrupt ? 'alert-pulse border-red-500/50 text-red-300' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300'}`}>
+                                                <h4 className="font-bold uppercase text-[10px] mb-2 text-white">{s.flow_status_title}</h4>
+                                                <p>{stats.isBankrupt ? s.flow_tip_bankrupt : s.flow_tip_solvent}</p>
+                                            </div>
+                                        </div>
+                                        <div className="lg:col-span-3 card-neo p-6 md:p-10 rounded-[32px] border-t-8 border-t-orange-500 shadow-2xl border border-white/5">
+                                            <header className="border-b border-white/10 pb-6 mb-8">
+                                                <h2 className="text-2xl font-bold text-orange-400 tracking-tight">{s.flow_stmt_title}</h2>
+                                            </header>
+                                            <div className="space-y-5 max-w-2xl mx-auto">
+                                                <DocRow label={s.flow_open_cash} value={2000000} formatter={formatCurrency} />
+                                                <DocRow label={s.flow_equip} value={-stats.cashSpentOnEquip} color="text-slate-400" formatter={formatCurrency} />
+                                                
+                                                <div className="h-[1px] bg-white/5 my-2"></div>
+                                                
+                                                <DocRow label={s.flow_cash_in} value={stats.cashIn} color="text-emerald-400" formatter={formatCurrency} />
+                                                <DocRow label={s.flow_cash_out_op} value={-stats.opex} color="text-red-400" formatter={formatCurrency} />
+                                                <DocRow label={s.flow_cash_out_pub} value={payDays <= 30 ? -stats.cogs : 0} color="text-red-400" formatter={formatCurrency} />
+                                                
+                                                <div className={`p-6 md:p-8 rounded-3xl mt-8 transition-all border shadow-xl ${stats.isBankrupt ? 'bg-red-500/20 border-red-500' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
+                                                    <DocRow label={s.flow_net_bank} value={stats.cash} isLarge isBold color={stats.isBankrupt ? 'text-red-500' : 'text-emerald-400'} sub={s.actualMoney} formatter={formatCurrency} />
+                                                    {stats.isBankrupt && (
+                                                        <p className="text-center text-[10px] text-red-400 uppercase tracking-widest mt-4 font-bold animate-bounce">
+                                                            {s.liquidityCrisis}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </SectionWrapper>
+                            )}
+
+                            {/* TAB: THE CASCADE */}
+                            {activeTab === 'cascade' && (
+                                <div className="space-y-8 animate-fadeIn">
+                                    <div className="glass p-6 md:p-8 rounded-[32px] border-l-8 border-emerald-500">
+                                        <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-emerald-400 mb-2">{s.tab_cascade}</h2>
+                                        <p className="text-slate-300 text-sm">{s.cas_desc}</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <CascadeCard level={s.cas_strategy} title={s.cas_card1_title} color="border-emerald-500" desc={s.cas_card1_desc} />
+                                        <CascadeCard level={s.cas_metric} title={s.cas_card2_title} color="border-blue-500" desc={s.cas_card2_desc} />
+                                        <CascadeCard level={s.cas_outcome} title={s.cas_card3_title} color="border-red-500" desc={stats.isBankrupt ? s.cas_card3_desc_bankrupt : s.cas_card3_desc_solvent} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB: WORKFLOW SIM */}
+                            {activeTab === 'workflow' && (
+                                <div className="space-y-8 animate-fadeIn">
+                                    <div className="glass p-6 md:p-8 rounded-[32px] border-l-8 border-blue-500">
+                                        <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-blue-400 mb-2">{s.wf_title}</h2>
+                                        <p className="text-slate-300 text-sm">{s.wf_desc}</p>
+                                    </div>
+                                    <div className="glass p-6 md:p-10 rounded-[32px] flex flex-col md:flex-row items-center justify-around gap-6 min-h-[300px]">
+                                        <WorkflowBox label={s.wf_order} active />
+                                        <div className="text-slate-500 font-bold text-2xl rotate-90 md:rotate-0">→</div>
+                                        <WorkflowBox label={s.wf_cogs} alert={stats.payDays <= 30} />
+                                        <div className="text-slate-500 font-bold text-2xl rotate-90 md:rotate-0">→</div>
+                                        <WorkflowBox label={s.wf_cash} success={stats.collectDays <= 30} />
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* TAB: BREAKOUT QUESTIONS */}
+                            {activeTab === 'breakout' && (
+                                <div className="space-y-8 animate-fadeIn">
+                                    <div className="glass p-6 md:p-8 rounded-[32px] border-l-8 border-purple-500">
+                                        <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-purple-400 mb-2">{s.br_title}</h2>
+                                        <p className="text-slate-300 text-sm">{s.br_desc}</p>
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        <BreakoutItem n="1" tag={s.br_q1_title} q={s.br_q1} />
+                                        <BreakoutItem n="2" tag={s.br_q2_title} q={s.br_q2} />
+                                        <BreakoutItem n="3" tag={s.br_q3_title} q={s.br_q3} />
+                                        <BreakoutItem n="4" tag={s.br_q4_title} q={s.br_q4} />
+                                        <BreakoutItem n="5" tag={s.br_q5_title} q={s.br_q5} />
+                                    </div>
+                                </div>
+                            )}
+
+                        </div>
+                    </div>
                 </div>
             );
         };
 
-        const SectionWrapper = ({ title, titleSi, description, descriptionSi, children }) => (
+        // Layout Helper Components
+        const SectionWrapper = ({ title, description, children }) => (
             <div className="space-y-8 animate-fadeIn">
-                <div className="glass p-8 rounded-[32px] border-l-8 border-emerald-500 shadow-xl">
-                    <h2 className="text-xl font-bold uppercase tracking-widest text-emerald-400 mb-2">{title}</h2>
-                    <h3 className="text-sm text-slate-500 italic font-sinhala mb-4">{titleSi}</h3>
-                    <p className="text-slate-300 text-sm leading-relaxed max-w-4xl">{description}</p>
-                    <p className="text-[11px] text-slate-500 italic font-sinhala mt-2 leading-relaxed max-w-4xl">{descriptionSi}</p>
+                <div className="glass p-6 md:p-8 rounded-[32px] border-l-8 border-emerald-500 shadow-xl">
+                    <h2 className="text-lg md:text-xl font-bold uppercase tracking-wider text-emerald-400 mb-2">{title}</h2>
+                    <p className="text-slate-300 text-xs md:text-sm leading-relaxed max-w-5xl">{description}</p>
                 </div>
                 {children}
             </div>
         );
 
         const NavBtn = ({ icon, label, active, onClick }) => (
-            <button onClick={onClick} className={`group relative p-4 rounded-2xl transition-all ${active ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-800'}`}>
+            <button 
+                onClick={onClick} 
+                className={`group relative w-full p-4 rounded-xl flex flex-col items-center justify-center transition-all ${active ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'}`}
+            >
                 {icon}
-                <span className="absolute left-20 bg-slate-800 text-white text-[10px] uppercase font-bold px-3 py-2 rounded-lg opacity-0 group-hover:opacity-100 whitespace-nowrap z-50 pointer-events-none transition-opacity">
+                <span className="text-[9px] font-bold uppercase tracking-tighter mt-2 text-center break-words max-w-full">
                     {label}
                 </span>
             </button>
         );
 
-        const VitalItem = ({ label, value, color }) => (
+        const MobileTabBtn = ({ label, active, onClick }) => (
+            <button 
+                onClick={onClick} 
+                className={`px-4 py-2 rounded-full text-xs font-bold transition-all shrink-0 ${active ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-900 text-slate-400 border border-white/5'}`}
+            >
+                {label}
+            </button>
+        );
+
+        const VitalItem = ({ label, value, color, formatter }) => (
             <div className="text-right">
-                <p className="text-[9px] text-slate-500 font-bold tracking-widest">{label}</p>
-                <p className={`text-base font-mono font-bold ${color}`}>LKR {value.toLocaleString()}</p>
+                <p className="text-[8px] text-slate-500 font-bold tracking-wider">{label}</p>
+                <p className={`text-xs md:text-sm font-mono font-bold ${color}`}>{formatter(value)}</p>
             </div>
         );
 
-        const TabInsight = () => (
-            <div className="space-y-8 animate-fadeIn">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <InsightCard title="THE BUSINESS MODEL" titleSi="ව්‍යාපාරික ආකෘතිය" color="border-emerald-500" desc="Buying books for LKR 1,500 and selling for LKR 2,500. A high-margin 40% agency model." />
-                    <InsightCard title="THE TIMING GAP" titleSi="කාල පරතරය" color="border-red-500" desc="Suppliers demand payment in 30 days. Schools pay in 90 days. This 60-day gap is the 'Death Valley'." />
-                    <InsightCard title="THE GROWTH TRAP" titleSi="වර්ධන උගුල" color="border-blue-500" desc="The more you sell, the more cash you need to pay upfront. Profit is not Liquidity." />
-                </div>
-                <div className="glass p-10 rounded-[40px] flex items-center gap-10">
-                    <div className="flex-1 space-y-4">
-                        <h2 className="text-3xl font-black uppercase tracking-tighter">Ground Truth: The Book Agent</h2>
-                        <p className="text-slate-400 leading-relaxed">This simulation tracks a growing educational agency. You begin with LKR 2,000,000 in capital. Your goal is to expand without triggering a liquidity failure by understanding the connection between Income, Balance, and Cash Flow.</p>
-                        <p className="text-sm text-slate-500 italic font-sinhala border-l-4 border-slate-700 pl-4 py-2">ඔබ රුපියල් මිලියන 2 ක ප්‍රාග්ධනයකින් ආරම්භ කරයි. ඔබගේ ඉලක්කය වන්නේ ද්‍රවශීලතාවය (මුදල් ගලායාම) බිඳ නොදමමින් ආදායම්, ශේෂ පත්‍ර සහ මුදල් ප්‍රවාහ අතර ඇති සම්බන්ධය වටහාගෙන ව්‍යාපාරය වර්ධනය කිරීමයි.</p>
-                    </div>
-                    <div className="w-64 h-64 bg-slate-900 rounded-full border-8 border-slate-800 flex items-center justify-center text-center p-6 shadow-2xl">
-                        <span className="text-emerald-500 font-black text-4xl">40%<br/><span className="text-xs text-slate-500 uppercase tracking-widest font-sans">Gross Margin</span><br/><span className="text-[10px] text-slate-600 font-sinhala italic mt-1">දළ ලාභ ආන්තිකය</span></span>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const TabEquation = ({ genChoice, setGenChoice, stats }) => {
-            const tilt = genChoice === 'loan' ? 'rotate-[-6deg]' : genChoice === 'cash' ? 'rotate-[0deg]' : 'rotate-[-2deg]';
-            return (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-                    <div className="lg:col-span-1 space-y-6">
-                        <div className="card-neo p-6 rounded-3xl space-y-4">
-                            <h3 className="text-emerald-400 font-bold uppercase text-xs tracking-widest">Decision Terminal <br/><span className="text-[10px] text-slate-500 font-sinhala italic">තීරණ මණ්ඩලය</span></h3>
-                            <button onClick={() => setGenChoice('loan')} className={`w-full p-5 rounded-2xl border transition-all text-left ${genChoice === 'loan' ? 'bg-blue-500/20 border-blue-500 shadow-xl' : 'bg-slate-800/50 border-white/10 opacity-70'}`}>
-                                <h4 className="font-bold text-sm">A: Bank Loan (Debt)</h4>
-                                <p className="text-[10px] text-slate-500 italic font-sinhala mt-1">A: බැංකු ණයක් ලබා ගැනීම (වගකීම්)</p>
-                                <p className="text-[10px] text-slate-400 mt-2">Asset Up (Generator) + Liability Up (Loan).</p>
-                            </button>
-                            <button onClick={() => setGenChoice('cash')} className={`w-full p-5 rounded-2xl border transition-all text-left ${genChoice === 'cash' ? 'bg-emerald-500/20 border-emerald-500 shadow-xl' : 'bg-slate-800/50 border-white/10 opacity-70'}`}>
-                                <h4 className="font-bold text-sm">B: Own Cash (Equity)</h4>
-                                <p className="text-[10px] text-slate-500 italic font-sinhala mt-1">B: තමන්ගේ මුදල් භාවිතා කිරීම (හිමිකම්)</p>
-                                <p className="text-[10px] text-slate-400 mt-2">Asset Composition Change (Liquid to Fixed).</p>
-                            </button>
-                        </div>
-                    </div>
-                    <div className="lg:col-span-2 flex flex-col items-center justify-center space-y-12">
-                        <div className={`relative w-full max-w-lg scale-transition ${tilt}`}>
-                            <div className="h-3 bg-slate-700 w-full rounded-full relative shadow-inner">
-                                <div className="absolute left-0 -top-8 text-[10px] font-black text-blue-400 uppercase tracking-widest text-center">ASSETS <br/><span className="font-sinhala text-[9px] italic font-normal">වත්කම්</span></div>
-                                <div className="absolute right-0 -top-8 text-[10px] font-black text-emerald-400 uppercase tracking-widest text-center">L + EQUITY <br/><span className="font-sinhala text-[9px] italic font-normal">වගකීම් + හිමිකම්</span></div>
-                            </div>
-                            <div className="flex justify-between mt-6">
-                                <div className="w-44 h-44 bg-blue-500/10 border-2 border-blue-500/30 rounded-[40px] flex flex-col items-center justify-center p-4 shadow-lg">
-                                    <span className="text-xl font-mono font-bold text-blue-400">{stats.totalAssets.toLocaleString()}</span>
-                                </div>
-                                <div className="w-44 h-44 bg-emerald-500/10 border-2 border-emerald-500/30 rounded-[40px] flex flex-col items-center justify-center p-4 shadow-lg">
-                                    <span className="text-xl font-mono font-bold text-emerald-400">{stats.totalLE.toLocaleString()}</span>
-                                </div>
-                            </div>
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 w-4 h-32 bg-slate-800 rounded-full -z-10 origin-top shadow-xl"></div>
-                        </div>
-                        <div className="text-center">
-                            <p className="text-[10px] text-slate-500 uppercase tracking-[0.4em] font-black">Accounting Balance Status: <span className={stats.totalAssets === stats.totalLE ? "text-emerald-400" : "text-red-500"}>{stats.totalAssets === stats.totalLE ? 'STABLE' : 'ERROR'}</span></p>
-                            <p className="text-[10px] text-slate-600 font-sinhala italic mt-2">ගිණුම්කරණ සමතුලිතතා තත්ත්වය</p>
-                        </div>
-                    </div>
-                </div>
-            );
-        };
-
-        const TabIncome = ({ volume, setVolume, price, setPrice, stats }) => (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-                <div className="lg:col-span-1 card-neo p-8 rounded-3xl space-y-10 no-print">
-                    <h3 className="text-emerald-400 font-bold uppercase text-xs tracking-widest border-b border-white/5 pb-2">Growth Controls <br/><span className="text-[10px] text-slate-500 font-sinhala italic font-normal">වර්ධන පාලනය</span></h3>
-                    <SliderItem label="Sales Volume (Units)" value={volume} min={100} max={5000} step={100} onChange={setVolume} labelSi="විකුණුම් ඒකක" />
-                    <SliderItem label="Unit Price (LKR)" value={price} min={1500} max={5000} step={50} onChange={setPrice} color="bg-blue-500" labelSi="ඒකකයක මිල" />
-                </div>
-                <div className="lg:col-span-3 card-neo p-10 rounded-[48px] shadow-2xl bg-slate-900/40 border border-white/5">
-                    <header className="border-b border-white/10 pb-8 mb-10 flex justify-between items-end">
-                        <div>
-                            <h2 className="text-3xl font-bold tracking-tighter">Income Statement</h2>
-                            <p className="text-[11px] text-slate-500 font-sinhala italic mt-1">ආදායම් ප්‍රකාශය</p>
-                        </div>
-                        <span className="text-[10px] font-mono text-slate-400 bg-slate-800 px-4 py-1.5 rounded-full uppercase tracking-widest border border-slate-700">Rounded to Nearest 1k</span>
-                    </header>
-                    <div className="space-y-4 max-w-2xl mx-auto">
-                        <DocRow label="Total Sales Revenue" value={stats.rev} isBold sub="මුළු විකුණුම් ආදායම" />
-                        <DocRow label="Cost of Goods Sold (COGS)" value={-stats.cogs} color="text-red-400" sub="විකුණුම් පිරිවැය" />
-                        <div className="h-[1px] bg-white/10 my-4"></div>
-                        <DocRow label="Gross Profit" value={stats.grossProfit} isBold color="text-emerald-400" sub="දළ ලාභය" />
-                        
-                        <div className="py-6 space-y-3 border-y border-white/5 mt-6">
-                            <SectionHeader label="Operating Expenses (මෙහෙයුම් වියදම්)" />
-                            <DocRow label="Rent & Utilities" value={-50000} sub="කුලිය සහ පොදු පහසුකම්" />
-                            <DocRow label="Delivery & Logistics" value={-stats.logistics} sub="ප්‍රවාහන වියදම්" />
-                            <DocRow label="Marketing & Sales" value={-25000} sub="අලෙවිකරණ වියදම්" />
-                            <DocRow label="General Insurance" value={-5000} sub="රක්ෂණ වාරික" />
-                        </div>
-                        
-                        <div className="pt-6 space-y-3">
-                            <DocRow label="EBIT (Operating Profit)" value={stats.ebit} isBold sub="මෙහෙයුම් ලාභය" />
-                            <DocRow label="Corporate Tax (30%)" value={-stats.tax} color="text-red-400" sub="සංගත බදු (30%)" />
-                            <div className="p-6 bg-emerald-500/10 rounded-3xl mt-6 border border-emerald-500/20 shadow-inner">
-                                <DocRow label="NET INCOME (PAT)" value={stats.net} isLarge isBold color="text-emerald-400" sub="ශුද්ධ ලාභය" />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const TabBalance = ({ stats }) => (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-                <div className="card-neo p-10 rounded-[40px] border-t-4 border-t-blue-500 shadow-xl border border-white/5">
-                    <h3 className="text-blue-400 font-bold uppercase text-xs tracking-widest mb-2">ASSETS</h3>
-                    <p className="text-[10px] text-slate-500 font-sinhala italic mb-8 border-b border-white/5 pb-4">වත්කම්</p>
-                    
-                    <div className="space-y-6">
-                        <SectionHeader label="Current Assets (ජංගම වත්කම්)" />
-                        <DocRow label="Cash at Bank" value={stats.cash} sub="බැංකුවේ ඇති මුදල්" />
-                        <DocRow label="Accounts Receivable" value={stats.ar} color="text-orange-400" sub="ලැබිය යුතු ගිණුම් (Schools Owe You)" />
-                        
-                        <div className="pt-4">
-                            <SectionHeader label="Non-Current Assets (ජංගම නොවන වත්කම්)" />
-                            <DocRow label="Fixed Equipment (Generator)" value={stats.equipment} sub="ස්ථාවර උපකරණ" />
-                        </div>
-                        
-                        <div className="pt-10 border-t border-white/10">
-                            <DocRow label="TOTAL ASSETS" value={stats.totalAssets} isBold isLarge color="text-blue-400" sub="මුළු වත්කම්" />
-                        </div>
-                    </div>
-                </div>
-                <div className="card-neo p-10 rounded-[40px] border-t-4 border-t-emerald-500 shadow-xl border border-white/5">
-                    <h3 className="text-emerald-400 font-bold uppercase text-xs tracking-widest mb-2">LIABILITIES & EQUITY</h3>
-                    <p className="text-[10px] text-slate-500 font-sinhala italic mb-8 border-b border-white/5 pb-4">වගකීම් සහ හිමිකම්</p>
-                    
-                    <div className="space-y-6">
-                        <SectionHeader label="Current Liabilities (ජංගම වගකීම්)" />
-                        <DocRow label="Accounts Payable" value={stats.ap} color="text-red-400" sub="ගෙවිය යුතු ගිණුම් (Owed to Publisher)" />
-                        <DocRow label="Taxes Payable" value={stats.taxesPayable} color="text-red-400" sub="ගෙවිය යුතු බදු" />
-                        <DocRow label="Short-term Bank Loan" value={stats.loans} sub="කෙටිකාලීන බැංකු ණය" />
-                        
-                        <div className="pt-4">
-                            <SectionHeader label="Owner's Equity (හිමිකම්)" />
-                            <DocRow label="Paid-in Capital" value={2000000} sub="ගෙවූ ප්‍රාග්ධනය" />
-                            <DocRow label="Retained Earnings (PAT)" value={stats.net} color="text-emerald-400" sub="රඳවා ගත් ලාභය" />
-                        </div>
-                        
-                        <div className="pt-10 border-t border-white/10">
-                            <DocRow label="TOTAL LIABILITIES & EQUITY" value={stats.totalLE} isBold isLarge color="text-emerald-400" sub="මුළු වගකීම් සහ හිමිකම්" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const TabFlow = ({ payDays, setPayDays, collectDays, setCollectDays, stats }) => (
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-10">
-                <div className="lg:col-span-1 card-neo p-8 rounded-3xl space-y-10 no-print">
-                    <h3 className="text-blue-400 font-bold uppercase text-xs tracking-widest border-b border-white/5 pb-2">Timing Controls <br/><span className="text-[10px] text-slate-500 font-sinhala italic font-normal">කාල පාලනය</span></h3>
-                    <SliderItem label="School Collection (Days)" value={collectDays} min={0} max={120} step={15} onChange={setCollectDays} color="bg-orange-500" labelSi="පාසලෙන් මුදල් ලැබෙන දින" />
-                    <SliderItem label="Publisher Payment (Days)" value={payDays} min={0} max={120} step={15} onChange={setPayDays} color="bg-purple-500" labelSi="ප්‍රකාශකයාට මුදල් ගෙවන දින" />
-                    <div className={`p-6 rounded-3xl border transition-all shadow-lg ${stats.isBankrupt ? 'alert-pulse border-red-500/50' : 'bg-blue-500/10 border-blue-500/30'}`}>
-                        <h4 className="text-[10px] font-bold uppercase mb-2 text-white">Liquidity Status</h4>
-                        <p className="text-xs text-slate-300 leading-relaxed">
-                            {stats.isBankrupt ? "BANKRUPT: Your bills exceeded your available cash. Structural failure." : "SOLVENT: Cash flow timing is successfully synchronized."}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-sinhala italic mt-2">
-                            {stats.isBankrupt ? "අවදානම්: පවතින මුදලට වඩා ගෙවීම් වැඩි වී ඇත." : "ස්ථාවර: මුදල් ප්‍රවාහ කාලය නිවැරදිව පාලනය කර ඇත."}
-                        </p>
-                    </div>
-                </div>
-                <div className="lg:col-span-3 card-neo p-10 rounded-[48px] border-t-8 border-t-orange-500 shadow-2xl border border-white/5">
-                    <header className="border-b border-white/10 pb-8 mb-10">
-                        <h2 className="text-3xl font-bold text-orange-400 tracking-tighter">Cash Flow Realism (Day 31)</h2>
-                        <p className="text-[11px] text-slate-500 font-sinhala italic mt-1">සත්‍ය මුදල් ප්‍රවාහය (31 වන දිනය)</p>
-                    </header>
-                    <div className="space-y-6 max-w-2xl mx-auto">
-                        <DocRow label="Opening Cash Balance" value={2000000} sub="ආරම්භක මුදල් ශේෂය" />
-                        <DocRow label="Equipment Purchase (Cash)" value={-stats.cashSpentOnEquip} color="text-slate-400" sub="උපකරණ මිලදී ගැනීම" />
-                        
-                        <div className="h-[1px] bg-white/5 my-4"></div>
-                        
-                        <DocRow label="Cash In: Sales Collected" value={stats.cashIn} color="text-emerald-400" sub="ලැබුණු මුදල්: විකුණුම් ආදායම" />
-                        <DocRow label="Cash Out: Operating Costs" value={-stats.opex} color="text-red-400" sub="ගෙවූ මුදල්: මෙහෙයුම් වියදම්" />
-                        <DocRow label="Cash Out: Publisher Payment" value={stats.payDays <= 30 ? -stats.cogs : 0} color="text-red-400" sub="ගෙවූ මුදල්: ප්‍රකාශකයාට" />
-                        
-                        <div className={`p-10 rounded-[40px] mt-10 transition-all border shadow-xl ${stats.isBankrupt ? 'bg-red-500/20 border-red-500' : 'bg-emerald-500/10 border-emerald-500/30'}`}>
-                            <DocRow label="NET BANK POSITION" value={stats.cash} isLarge isBold color={stats.isBankrupt ? 'text-red-500' : 'text-emerald-400'} sub="ශුද්ධ බැංකු තත්ත්වය (Actual Money in Hand)" />
-                            {stats.isBankrupt && (
-                                <p className="text-center text-[10px] text-red-400 uppercase tracking-widest mt-4 font-bold animate-bounce">Liquidity Crisis Detected</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-
-        const TabCascade = ({ stats }) => (
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <CascadeCard level="Strategy" levelSi="උපායමාර්ගය" title="Market Expansion" color="border-emerald-500" desc="Taking a 2,000 unit order to grow market share." />
-                <CascadeCard level="Metric" levelSi="මිනුම" title="Inventory Management" color="border-blue-500" desc={`Handling LKR ${stats.cogs.toLocaleString()} in stock risk.`} />
-                <CascadeCard level="Outcome" levelSi="ප්‍රතිඵලය" title="Liquidity Risk" color="border-red-500" desc={stats.isBankrupt ? "Operational Failure due to growth gap." : "Balanced Growth Achieved."} />
-            </div>
-        );
-
-        const TabWorkflow = ({ stats }) => (
-            <div className="glass p-10 rounded-[48px] flex items-center justify-center space-x-12 min-h-[400px]">
-                <WorkflowBox label="Order Placed" subSi="ඇණවුම ලැබීම" active />
-                <div className="text-slate-600 font-bold text-xl">→</div>
-                <WorkflowBox label="COGS Due (Day 30)" subSi="ගෙවීම (දින 30)" alert={stats.payDays <= 30} />
-                <div className="text-slate-600 font-bold text-xl">→</div>
-                <WorkflowBox label="Cash In (Day 90)" subSi="මුදල් ලැබීම (දින 90)" active={stats.collectDays <= 30} success={stats.collectDays <= 30} />
-            </div>
-        );
-
-        const TabBreakout = () => (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <BreakoutItem n="1" q="If your profit is 2M but bank is -2.5M, are you a success?" qSi="ඔබේ ලාභය මිලියන 2ක් වන විට, බැංකු ශේෂය සෘණ මිලියන 2.5ක් නම්, ඔබ සාර්ථකද?" />
-                <BreakoutItem n="2" q="Why is a 30% tax rate a 'Cash' problem for managers?" qSi="30% ක බදු අනුපාතයක් කළමනාකරුවන්ට 'මුදල්' පිළිබඳ ගැටලුවක් වන්නේ ඇයි?" />
-                <BreakoutItem n="3" q="Define 'The Death Valley' in your own words." qSi="'මාරක නිම්නය' (Death Valley) ඔබේ වචනවලින් විස්තර කරන්න." />
-                <BreakoutItem n="4" q="Would you sacrifice 10% margin to get paid in 15 days?" qSi="දින 15කින් මුදල් ලබා ගැනීම සඳහා 10% ක ලාභ ආන්තිකයක් කැප කිරීමට ඔබ සූදානම්ද?" />
-                <BreakoutItem n="5" q="How does a bank loan hide a liquidity problem initially?" qSi="බැංකු ණයක් මගින් ආරම්භයේදී ද්‍රවශීලතා ගැටලුවක් සඟවන්නේ කෙසේද?" />
-            </div>
-        );
-
-        const DocRow = ({ label, value, sub, color = "text-slate-200", isBold = false, isLarge = false }) => (
-            <div className="flex justify-between items-start">
+        const DocRow = ({ label, value, color = "text-slate-200", isBold = false, isLarge = false, sub, formatter }) => (
+            <div className="flex justify-between items-start py-0.5">
                 <div>
                     <p className={`text-[11px] uppercase tracking-wide ${isBold ? 'font-bold' : 'font-medium'} ${color}`}>{label}</p>
-                    {sub && <p className="text-[10px] text-slate-500 font-sinhala italic mt-0.5">{sub}</p>}
+                    {sub && <p className="text-[10px] text-slate-500 font-medium italic mt-0.5">{sub}</p>}
                 </div>
-                <div className={`font-mono text-right ${isLarge ? 'text-2xl' : 'text-sm'} ${isBold ? 'font-black' : 'font-bold'} ${color}`}>
-                    {value < 0 ? `(LKR ${Math.abs(value).toLocaleString()})` : `LKR ${value.toLocaleString()}`}
+                <div className={`font-mono text-right ${isLarge ? 'text-xl md:text-2xl' : 'text-xs md:text-sm'} ${isBold ? 'font-black' : 'font-bold'} ${color}`}>
+                    {formatter(value)}
                 </div>
             </div>
         );
 
         const SectionHeader = ({ label }) => (
-            <p className="text-[9px] font-black text-slate-600 uppercase border-b border-white/5 pb-1 tracking-[0.2em]">{label}</p>
+            <p className="text-[9px] font-black text-slate-500 uppercase border-b border-white/5 pb-1 tracking-[0.25em] mb-3">{label}</p>
         );
 
-        const SliderItem = ({ label, value, min, max, step, onChange, color = "bg-emerald-500", labelSi }) => (
-            <div className="space-y-4">
+        const SliderItem = ({ label, value, min, max, step, onChange, color = "bg-emerald-500" }) => (
+            <div className="space-y-3">
                 <div className="flex justify-between items-end">
-                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{label}</label>
-                    <span className="text-sm font-mono font-bold text-white">{value.toLocaleString()}</span>
+                    <label className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{label}</label>
+                    <span className="text-xs font-mono font-bold text-white">{value.toLocaleString()}</span>
                 </div>
-                <input type="range" min={min} max={max} step={step} value={value} onChange={e => onChange(Number(e.target.value))} className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-white ${color} shadow-lg`} />
-                {labelSi && <p className="text-[10px] text-slate-500 italic font-sinhala leading-none">{labelSi}</p>}
+                <input 
+                    type="range" 
+                    min={min} 
+                    max={max} 
+                    step={step} 
+                    value={value} 
+                    onChange={e => onChange(Number(e.target.value))} 
+                    className={`w-full h-1.5 rounded-lg appearance-none cursor-pointer accent-white ${color} shadow-lg`} 
+                />
             </div>
         );
 
-        const InsightCard = ({ title, titleSi, desc, color }) => (
-            <div className={`glass p-6 rounded-3xl border-l-4 ${color}`}>
-                <h4 className="text-xs font-bold text-white tracking-widest uppercase mb-1">{title}</h4>
-                <p className="text-[10px] text-slate-500 italic font-sinhala mb-3 border-b border-white/5 pb-2">{titleSi}</p>
-                <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
+        const InsightCard = ({ title, desc, color }) => (
+            <div className={`glass p-6 rounded-3xl border-l-4 ${color} space-y-2`}>
+                <h4 className="text-xs font-bold text-white tracking-wider uppercase">{title}</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">{desc}</p>
             </div>
         );
 
-        const CascadeCard = ({ level, levelSi, title, color, desc }) => (
-            <div className={`card-neo p-8 rounded-3xl border-l-8 ${color}`}>
-                <p className="text-[10px] font-black text-slate-500 uppercase mb-0.5">{level}</p>
-                <p className="text-[9px] text-slate-600 font-sinhala italic mb-4">{levelSi}</p>
-                <h4 className="font-bold text-base mb-3 text-white">{title}</h4>
-                <p className="text-xs text-slate-400 leading-relaxed">{desc}</p>
+        const CascadeCard = ({ level, title, color, desc }) => (
+            <div className={`card-neo p-6 rounded-3xl border-l-8 ${color} space-y-3`}>
+                <p className="text-[9px] font-black text-slate-500 uppercase">{level}</p>
+                <h4 className="font-bold text-sm text-white">{title}</h4>
+                <p className="text-xs text-slate-300 leading-relaxed">{desc}</p>
             </div>
         );
 
-        const WorkflowBox = ({ label, subSi, active, alert, success }) => (
-            <div className={`w-36 h-36 rounded-[32px] flex flex-col items-center justify-center p-4 text-center border-2 transition-all shadow-xl
-                ${alert ? 'border-red-500 bg-red-500/10 text-red-400' : success ? 'border-emerald-500 bg-emerald-500/10 text-emerald-400' : active ? 'border-blue-500 bg-blue-500/10 text-blue-400' : 'border-slate-800 text-slate-600'}`}>
-                <span className="text-[11px] font-bold uppercase tracking-wider">{label}</span>
-                {subSi && <span className="text-[10px] font-sinhala italic opacity-70 mt-2">{subSi}</span>}
+        const WorkflowBox = ({ label, active, alert, success }) => {
+            let styleClasses = "border-slate-800 text-slate-500";
+            if (alert) styleClasses = "border-red-500 bg-red-500/10 text-red-400";
+            else if (success) styleClasses = "border-emerald-500 bg-emerald-500/10 text-emerald-400";
+            else if (active) styleClasses = "border-blue-500 bg-blue-500/10 text-blue-400";
+
+            return (
+                <div className={`w-36 h-36 rounded-3xl flex flex-col items-center justify-center p-4 text-center border-2 transition-all shadow-xl ${styleClasses}`}>
+                    <span className="text-xs font-bold uppercase tracking-wider">{label}</span>
+                </div>
+            );
+        };
+
+        const BreakoutItem = ({ n, tag, q }) => (
+            <div className="glass p-6 rounded-2xl border-l-4 border-emerald-500 hover:border-blue-500 transition-all shadow-lg space-y-3">
+                <p className="text-emerald-500 font-bold text-[9px] uppercase tracking-wider border-b border-white/5 pb-2">
+                    {tag}
+                </p>
+                <p className="text-xs md:text-sm leading-relaxed font-semibold text-slate-200">{q}</p>
             </div>
         );
 
-        const BreakoutItem = ({ n, q, qSi }) => (
-            <div className="glass p-6 rounded-3xl border-l-4 border-emerald-500 hover:border-blue-500 transition-all shadow-lg">
-                <p className="text-emerald-500 font-bold text-[10px] mb-3 uppercase tracking-widest border-b border-white/5 pb-2">Discussion #{n}</p>
-                <p className="text-sm leading-relaxed font-medium text-slate-200">{q}</p>
-                <p className="text-xs leading-relaxed font-sinhala italic text-slate-500 mt-2">{qSi}</p>
-            </div>
-        );
-
+        // Initiate React Application
         const root = ReactDOM.createRoot(document.getElementById('root'));
         root.render(<App />);
     </script>
